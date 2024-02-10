@@ -21,6 +21,8 @@ zezoneserver.use(express.json())
 
 zezoneserver.use(router)
 
+zezoneserver.use('/UserPosts',express.static('./UserPosts'))
+
 const PORT = 4000 || process.env.PORT
 
 //run server app

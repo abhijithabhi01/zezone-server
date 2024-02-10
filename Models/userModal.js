@@ -24,6 +24,9 @@ const userModal = new mongoose.Schema({
             },
     bio:{
                 type:String
+            },
+    profileimage:{
+                type:String
             }
 })
 
