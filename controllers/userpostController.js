@@ -1,6 +1,6 @@
 const users = require('../Models/userModal');
 const userposts = require('../Models/userpostModal');
-const postModal = require('../Models/userpostModal');
+const userpost = require('../Models/userpostModal');
 const { deleteUser } = require('./userController');
 
 exports.addPosts = async(req,res)=>{
@@ -12,14 +12,18 @@ exports.addPosts = async(req,res)=>{
     const {caption} = req.body
    // console.log(`${postimage},\n ${caption}`);
     try{
-      const newpost = new postModal({
-        postimage,caption,userId
+      const newpost = new userposts({
+        postimage,
+        caption,
+        userId
       })
+      //console.log({postimage,caption,userId});
       await newpost.save()
       res.status(200).json(newpost)
     }
-    catch(err){
-        res.status(401).json("Request failed due to",err)
+    catch (err) {
+      console.error('Error:', err);
+      res.status(401).json("Request failed due to an error");
     }
 }
 
@@ -27,7 +31,7 @@ exports.addPosts = async(req,res)=>{
 exports.userprofileposts = async(req,res)=>{
   const userId = req.payload
   try{
-    const getuserposts = await userposts.find({userId})
+    const getuserposts = await userpost.find({userId})
     res.status(200).json(getuserposts)
   }
   catch(err){
@@ -39,7 +43,7 @@ exports.userprofileposts = async(req,res)=>{
 exports.getallposts = async(req,res)=>{
   
   try{
-    const allposts = await userposts.find()
+    const allposts = await userpost.find()
     res.status(200).json(allposts)
   }
   catch(err){
@@ -55,7 +59,7 @@ exports.edituserpost = async(req,res)=>{
   const newpostimage = req.file?req.file.filename:postimage
 
   try{
-    const editpost = await userposts.findByIdAndUpdate({_id:id},{
+    const editpost = await userpost.findByIdAndUpdate({_id:id},{
       postimage:newpostimage,caption,userId
     },{new:true})
 
@@ -71,7 +75,7 @@ exports.edituserpost = async(req,res)=>{
 exports.deletepost = async(req,res)=>{
   const{id} = req.params
   try{
-    const deletepost = await userposts.findByIdAndDelete({_id:id})
+    const deletepost = await userpost.findByIdAndDelete({_id:id})
     res.status(200).json(deletepost)
   }
   catch(err){
@@ -84,7 +88,7 @@ exports.deleteuserposts = async(req,res)=>{
   const{id} = req.params
   try{
     if(deleteUser){
-      userposts.deleteMany({userId:id})
+      userpost.deleteMany({userId:id})
       res.status(200).json( 'User and associated posts deleted successfully');
     }
     else{

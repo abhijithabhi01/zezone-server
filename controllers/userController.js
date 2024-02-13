@@ -91,7 +91,9 @@ exports.getallusers = async(req,res)=>{
   }
 exports.edituser = async(req,res)=>{
   const userId=req.payload
-  const{username,bio,profileimage} = req.body
+  const profileimagee = req.file.filename
+  console.log(profileimagee);
+  const{username,bio} = req.body
   console.log({username,bio,profileimage})
   const updateimg = req.file?req.file.filename:profileimage
 
