@@ -1,41 +1,47 @@
 const { query } = require('express');
 const users = require('../Models/userModal')
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const userposts = require('../Models/userpostModal');
 
 //register
-exports.register = async (req,res) => {
-    console.log('running register controller function');
+exports.register = async (req, res) => {
+  console.log('running register controller function');
 
-    const {username,email,password} = req.body
-   // console.log(`username:`,username,`email:`,email,`password:`,password);
+  const { username, email, password } = req.body;
+
+  try {
+      // Convert both email and username to lowercase for case-insensitive check
+      const existingUser = await users.findOne({
+          $or: [
+              { email: email.toLowerCase() },
+              { username: username.toLowerCase() }
+          ]
+      });
+
+      if (existingUser) {
+          if (existingUser.email.toLowerCase() === email.toLowerCase()) {
+              res.status(406).json("Account with this email already exists, please login.");
+          } else {
+              res.status(406).json("Username already taken, please choose another one.");
+          }
+      } else {
+          const newUser = new users({
+              username,
+              email,
+              password,
+              bio: "",
+              profileimage: ""
+          });
+
+          await newUser.save();
+          res.status(200).json(newUser);
+      }
+  } catch (err) {
+      res.status(401).json(`Registration Failed: ${err}`);
+  }
+};
 
 
-    try{
-        const existingUser = await users.findOne({ $or: [{ email }, { username }] });
-        if(existingUser){
-          if (existingUser.email === email) {
-            res.status(406).json("Account with this email already exists, please login.");
-        } else {
-            res.status(406).json("Username already taken, please choose another one.");
-        }
-    
-        }
-        else{
-            const newUser = new users({
-                username,
-                email,
-                password,
-                bio:"",
-                profileimage:""
-            })
-            await newUser.save()
-            res.status(200).json(newUser)    
-        }
-    }catch(err){
-        res.status(401).json(`Registration Failed :${err}`)
-    }
-
-}
 exports.login = async(req,res)=>{
     console.log('running login function');
 
@@ -59,6 +65,8 @@ exports.login = async(req,res)=>{
 }
 }
 
+
+
 exports.getallusers = async(req,res)=>{
   
     try{
@@ -69,6 +77,8 @@ exports.getallusers = async(req,res)=>{
       res.status(401).json(`error getting all users`,err)
     }
   }
+
+
 
   exports.searchusers = async(req,res)=>{
     console.log(`running search user function`);
@@ -89,12 +99,14 @@ exports.getallusers = async(req,res)=>{
       res.status(401).json(`error searching users`,err)
     }
   }
+
+
 exports.edituser = async(req,res)=>{
   const userId=req.payload
   const profileimagee = req.file.filename
   console.log(profileimagee);
   const{username,bio} = req.body
-  console.log({username,bio,profileimage})
+  console.log({username,bio})
   const updateimg = req.file?req.file.filename:profileimage
 
 try{
@@ -108,19 +120,24 @@ catch(err){
 
 }
 
-// Delete User
-exports.deleteUser = async (req, res) => {
-  const userId = req.payload; 
-  try {
 
-    const deletedUser = await users.findByIdAndDelete({_id:userId})
+// Delete User and User Posts
+exports.deleteUser = async (req, res) => {
+  const userId = req.payload;
+
+  try {
+    // Delete user posts first
+    await userposts.deleteMany({ userId });
+
+    // Delete the user
+    const deletedUser = await users.findByIdAndDelete({ _id: userId });
 
     if (deletedUser) {
-      res.status(200).json( 'User deleted successfully');
+      res.status(200).json('User and associated posts deleted successfully');
     } else {
-      res.status(404).json( 'User not found' );
+      res.status(404).json('User not found');
     }
   } catch (err) {
-    res.status(500).json( `Error deleting user: ${err}` );
+    res.status(500).json(`Error deleting user: ${err}`);
   }
 };
