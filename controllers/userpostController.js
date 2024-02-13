@@ -1,6 +1,7 @@
 const users = require('../Models/userModal');
-const userpost = require('../Models/userpostModal');
-const postModal = require('../Models/userpostModal')
+const userposts = require('../Models/userpostModal');
+const postModal = require('../Models/userpostModal');
+const { deleteUser } = require('./userController');
 
 exports.addPosts = async(req,res)=>{
     console.log('running addpost function');
@@ -26,7 +27,7 @@ exports.addPosts = async(req,res)=>{
 exports.userprofileposts = async(req,res)=>{
   const userId = req.payload
   try{
-    const getuserposts = await userpost.find({userId})
+    const getuserposts = await userposts.find({userId})
     res.status(200).json(getuserposts)
   }
   catch(err){
@@ -38,7 +39,7 @@ exports.userprofileposts = async(req,res)=>{
 exports.getallposts = async(req,res)=>{
   
   try{
-    const allposts = await userpost.find()
+    const allposts = await userposts.find()
     res.status(200).json(allposts)
   }
   catch(err){
@@ -54,7 +55,7 @@ exports.edituserpost = async(req,res)=>{
   const newpostimage = req.file?req.file.filename:postimage
 
   try{
-    const editpost = await userpost.findByIdAndUpdate({_id:id},{
+    const editpost = await userposts.findByIdAndUpdate({_id:id},{
       postimage:newpostimage,caption,userId
     },{new:true})
 
@@ -70,13 +71,34 @@ exports.edituserpost = async(req,res)=>{
 exports.deletepost = async(req,res)=>{
   const{id} = req.params
   try{
-    const deletepost = await userpost.findByIdAndDelete({_id:id})
+    const deletepost = await userposts.findByIdAndDelete({_id:id})
     res.status(200).json(deletepost)
   }
   catch(err){
     res.status(200).json(err)
   }
 }
+
+
+exports.deleteuserposts = async(req,res)=>{
+  const{id} = req.params
+  try{
+    if(deleteUser){
+      userposts.deleteMany({userId:id})
+      res.status(200).json( 'User and associated posts deleted successfully');
+    }
+    else{
+      res.status(404).json(`userpost delete error`);
+    }
+  }catch(err){
+    res.status(404).json(`userpost delete error,${err}`);
+  }
+}
+
+
+
+
+
 
 // exports.likepost = async(req,res)=>{
 //   try {

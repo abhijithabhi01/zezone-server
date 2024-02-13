@@ -47,4 +47,8 @@ router.delete('/post/delete/:id',jwtMiddleware,userpostController.deletepost)
 //edit profile
 router.put('/user/edit/',jwtMiddleware,multerConfig.single('profileimage'),userController.edituser)
 
+//delete user
+router.delete('/user/delete/:id',jwtMiddleware,userController.deleteUser)
+
+
 module.exports = router

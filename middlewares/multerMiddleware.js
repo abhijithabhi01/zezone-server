@@ -7,7 +7,7 @@ const storage = multer.diskStorage({
         callback(null,'./UserPosts')
     },
     filename:(req,file,callback)=>{
-        const filename = `ZEZONE-${file.originalname}`
+        const filename = `ZEZONE-${Date.now}-${file.originalname}`
         callback(null,filename)
     }
 })

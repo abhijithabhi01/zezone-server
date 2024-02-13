@@ -22,6 +22,6 @@ const postModal = new mongoose.Schema({
     },
 })
 
-const userpost = mongoose.model("userpost",postModal)
+const userposts = mongoose.model("userposts",postModal)
 
-module.exports = userpost
+module.exports = userposts

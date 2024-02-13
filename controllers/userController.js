@@ -66,7 +66,7 @@ exports.getallusers = async(req,res)=>{
       res.status(200).json(allusers)
     }
     catch(err){
-      res.status(401).json(err)
+      res.status(401).json(`error getting all users`,err)
     }
   }
 
@@ -86,7 +86,7 @@ exports.getallusers = async(req,res)=>{
       res.status(200).json(allusers)
     }
     catch(err){
-      res.status(401).json(err)
+      res.status(401).json(`error searching users`,err)
     }
   }
 exports.edituser = async(req,res)=>{
@@ -101,7 +101,24 @@ try{
   res.status(200).json(updateuser)
 }
 catch(err){
-  res.status(401).json(err)
+  res.status(401).json(`Error editing post`,err)
 }
 
 }
+
+// Delete User
+exports.deleteUser = async (req, res) => {
+  const userId = req.payload; 
+  try {
+
+    const deletedUser = await users.findByIdAndDelete({_id:userId})
+
+    if (deletedUser) {
+      res.status(200).json( 'User deleted successfully');
+    } else {
+      res.status(404).json( 'User not found' );
+    }
+  } catch (err) {
+    res.status(500).json( `Error deleting user: ${err}` );
+  }
+};
