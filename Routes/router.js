@@ -43,6 +43,14 @@ router.put('/user/edit/',jwtMiddleware,multerConfig.single('profileimage'),userC
 //delete user
 router.delete('/user/delete/:id',jwtMiddleware,userController.deleteUser)
 
+// Like a post
+ router.post('/userposts/like/:postId',jwtMiddleware,userpostController.likeuserpost);
+
+// Dislike a post
+//  router.post('/userposts/dislike/:id', jwtMiddleware, userpostController.dislikeuserpost);
+
+
+
 //comment 
 
 // router.post('/comments/add', jwtMiddleware, commentController.addComment);

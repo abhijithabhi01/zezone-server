@@ -20,9 +20,9 @@ const postModal = new mongoose.Schema({
     dislikes: {
         type: Number,
         default: 0
-    },
-})
-
+    }
+    
+ });
 const userposts = mongoose.model("userposts",postModal)
 
 module.exports = userposts

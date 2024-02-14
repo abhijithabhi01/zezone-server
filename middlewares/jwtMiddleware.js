@@ -4,6 +4,7 @@ const jwtMiddleware = (req,res,next)=>{
     console.log('Running jwt middleware');
 
     const token = req.headers['authorization'].split(' ')[1]
+    
     //console.log(token);
 
     try{
@@ -20,3 +21,4 @@ const jwtMiddleware = (req,res,next)=>{
 }
 
 module.exports = jwtMiddleware
+

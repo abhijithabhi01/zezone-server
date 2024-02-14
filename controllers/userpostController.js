@@ -81,3 +81,58 @@ exports.deletepost = async(req,res)=>{
     res.status(200).json(err)
   }
 }
+
+//like post
+exports.likeuserpost = async(req,res)=>{
+  try {
+    const postId = req.params.postId;
+console.log(`postid:`,postId);
+
+    console.log('Before finding post by ID');
+    const post = await userpost.findById(postId);
+    console.log('After finding post by ID', post);
+    
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Update the likes count
+    post.likes += 1;
+
+    // Save the updated post
+    await post.save();
+
+    res.json({ message: 'Post liked successfully', likes: post.likes });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+
+// // Dislike a post
+// router.post('/dislike/:postId', async (req, res) => {
+//   try {
+//     const postId = req.params.postId;
+
+//     // Find the post by ID
+//     const post = await Post.findById(postId);
+
+//     if (!post) {
+//       return res.status(404).json({ error: 'Post not found' });
+//     }
+
+//     // Update the likes count (for dislike, you may want to implement more logic)
+//     post.likes -= 1;
+
+//     // Save the updated post
+//     await post.save();
+
+//     res.json({ message: 'Post disliked successfully', likes: post.likes });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
+
