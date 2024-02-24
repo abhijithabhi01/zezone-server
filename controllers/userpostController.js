@@ -1,3 +1,4 @@
+const users = require('../Models/userModal');
 const userposts = require('../Models/userpostModal');
 const userpost = require('../Models/userpostModal');
 const { deleteUser } = require('./userController');
@@ -29,6 +30,7 @@ exports.addPosts = async(req,res)=>{
 //get user post 
 exports.userprofileposts = async(req,res)=>{
   const userId = req.payload
+  console.log(`running get the userposts`);
   try{
     const getuserposts = await userpost.find({userId})
     res.status(200).json(getuserposts)
@@ -40,7 +42,7 @@ exports.userprofileposts = async(req,res)=>{
 
 //get home user posts
 exports.getallposts = async(req,res)=>{
-  
+  console.log(`running get all posts`);
   try{
     const allposts = await userpost.find()
     res.status(200).json(allposts)
@@ -56,7 +58,7 @@ exports.edituserpost = async(req,res)=>{
   const userId = req.payload
   const {postimage,caption} = req.body
   const newpostimage = req.file?req.file.filename:postimage
-
+console.log(`running edit a post`);
   try{
     const editpost = await userpost.findByIdAndUpdate({_id:id},{
       postimage:newpostimage,caption,userId
@@ -72,6 +74,7 @@ exports.edituserpost = async(req,res)=>{
 
 //delete post
 exports.deletepost = async(req,res)=>{
+  console.log(`running delete a post`);
   const{id} = req.params
   try{
     const deletepost = await userpost.findByIdAndDelete({_id:id})
@@ -82,57 +85,135 @@ exports.deletepost = async(req,res)=>{
   }
 }
 
-//like post
-exports.likeuserpost = async(req,res)=>{
-  try {
-    const postId = req.params.postId;
-console.log(`postid:`,postId);
 
-    console.log('Before finding post by ID');
+// like & dislike a post
+exports.likePost = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.payload;
+  console.log(`running like function`);
+  try {
+    const post = await userposts.findOne({ _id: id });
+
+    const likesArray = post.likes.map(like => like.userId);
+
+    if (likesArray.includes(userId)) {
+    
+      await userposts.updateOne(
+        { _id: id },
+        { $pull: { likes: { userId } } }
+      );
+      res.status(210).json({ message: 'Like removed successfully' });
+    }
+     else {
+      
+      await userposts.updateOne(
+        { _id: id },
+        { $push: { likes: { userId } } }
+      );
+      res.status(200).json({ message: 'Post liked successfully' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+// add comment
+exports.addComment = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.payload;
+ const {comment} = req.body
+console.log(`running add comment function`);
+console.log(id,userId,comment);
+try {
+  const post = await userpost.findById(id);
+  const usrs = await users.findById(userId)
+  const username = usrs.username
+  console.log('commentor:',username);
+  if (!post) {
+    return res.status(404).json({ message: 'Post not found' });
+  }
+
+  const newComment = {
+    userId,
+    username,
+    comment,
+  };
+
+  post.comments.push(newComment);
+  await post.save();
+
+  res.status(200).json({ message: 'Comment added successfully', comment: newComment });
+} catch (error) {
+  console.error(error);
+  res.status(500).json({ message: 'Internal Server Error' });
+}
+};
+
+// delete comment
+exports.deleteacomment = async (req, res) => {
+  const {postId,commentId } = req.body;
+  const userId = req.payload;
+
+  console.log(`running delete comment function`);
+  //console.log(postId,commentId,userId);
+  try {
     const post = await userpost.findById(postId);
-    console.log('After finding post by ID', post);
-    
-    
+
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Update the likes count
-    post.likes += 1;
+    const commentIndex = post.comments.findIndex(
+      (comment) => comment._id.toString() === commentId && comment.userId === userId
+    );
+
+    if (commentIndex === -1) {
+      return res.status(404).json(`user cannot delete comment`);
+    }
+
+    // Remove the comment from the array
+    post.comments.splice(commentIndex, 1);
+
+    await post.save();
+
+    res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+// delete comment by user 
+exports.deleteusrcomment = async (req, res) => {
+  const { postId, commentId } = req.body;
+  const userId = req.payload;
+
+  console.log(`running delete comment function`);
+
+  try {
+    // Find the post by ID
+    const post = await userpost.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Find the index of the comment with the given ID
+    const commentIndex = post.comments.findIndex(comment => comment._id == commentId);
+
+    if (commentIndex === -1) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    // Remove the comment from the comments array
+    post.comments.splice(commentIndex, 1);
 
     // Save the updated post
     await post.save();
 
-    res.json({ message: 'Post liked successfully', likes: post.likes });
+    res.status(200).json({ message: 'Comment deleted successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ message: 'Internal Server Error' });
   }
-}
-
-
-// // Dislike a post
-// router.post('/dislike/:postId', async (req, res) => {
-//   try {
-//     const postId = req.params.postId;
-
-//     // Find the post by ID
-//     const post = await Post.findById(postId);
-
-//     if (!post) {
-//       return res.status(404).json({ error: 'Post not found' });
-//     }
-
-//     // Update the likes count (for dislike, you may want to implement more logic)
-//     post.likes -= 1;
-
-//     // Save the updated post
-//     await post.save();
-
-//     res.json({ message: 'Post disliked successfully', likes: post.likes });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
-
+};

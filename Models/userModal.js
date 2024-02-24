@@ -27,7 +27,13 @@ const userModal = new mongoose.Schema({
             },
     profileimage:{
                 type:String
+            },
+    followers: [
+            {
+            userId: {type: String},
+            username: {type: String}
             }
+                   ],
 })
 
 //model 

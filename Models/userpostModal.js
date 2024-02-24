@@ -13,16 +13,17 @@ const postModal = new mongoose.Schema({
         type:String,
     
     },
-    likes: {
-        type: Number,
-        default: 0
-    },
-    dislikes: {
-        type: Number,
-        default: 0
-    }
-    
- });
+    likes: [
+        {userId: {type: String}}
+           ],
+    comments: [
+        {
+        userId: { type: String },
+        username: { type: String },
+        comment: { type: String }
+        }
+           ]
+ })
 const userposts = mongoose.model("userposts",postModal)
 
 module.exports = userposts

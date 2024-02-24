@@ -20,9 +20,9 @@ exports.register = async (req, res) => {
 
       if (existingUser) {
           if (existingUser.email.toLowerCase() === email.toLowerCase()) {
-              res.status(406).json("Account with this email already exists, please login.");
+            res.status(406).json({ message: "Account with this email already exists, please login." });
           } else {
-              res.status(406).json("Username already taken, please choose another one.");
+            res.status(406).json({ message: "Username already taken, please choose another one." })
           }
       } else {
           const newUser = new users({
@@ -74,31 +74,32 @@ exports.getallusers = async(req,res)=>{
       res.status(200).json(allusers)
     }
     catch(err){
-      res.status(401).json(`error getting all users`,err)
+      res.status(401).json({ message: "error getting all users" })
     }
   }
 
 
 
-  exports.searchusers = async(req,res)=>{
+exports.searchusers = async (req, res) => {
     console.log(`running search user function`);
-  const searchuser = req.query.search
-  console.log(searchuser);
- 
-  const query = {
-    username:{
-        $regex:searchuser, $options:'i'
+    const searchuser = req.query.search;
+    console.log(searchuser);
+
+    const query = {
+        username: {
+            $regex: searchuser,
+            $options: 'i'
+        }
+    };
+
+    try {
+        const allusers = await users.find(query);
+        res.status(200).json(allusers);
+    } catch (err) {
+        res.status(401).json({ error: `error searching users - ${err.message}` });
     }
-     
-  } 
-    try{
-      const allusers = await users.find(query)
-      res.status(200).json(allusers)
-    }
-    catch(err){
-      res.status(401).json(`error searching users`,err)
-    }
-  }
+};
+
 
 
 exports.edituser = async(req,res)=>{
@@ -133,11 +134,57 @@ exports.deleteUser = async (req, res) => {
     const deletedUser = await users.findByIdAndDelete({ _id: userId });
 
     if (deletedUser) {
-      res.status(200).json('User and associated posts deleted successfully');
+      res.status(200).json({ message: 'User and associated posts deleted successfully' });
     } else {
-      res.status(404).json('User not found');
+      res.status(404).json({ message: 'User not found' });
+
     }
   } catch (err) {
-    res.status(500).json(`Error deleting user: ${err}`);
+    res.status(500).json({ message: `Error deleting user: ${err}` });
+  }
+};
+
+
+// Follow a user
+// Follow or Unfollow a user
+exports.followUser = async (req, res) => {
+  const followerId = req.payload; // ID of the user performing the follow
+  const followeeId = req.params.id; // ID of the user to be followed
+  const usrs = await users.findById(followerId);
+  const username = usrs.username;
+
+  try {
+    const followee = await users.findById(followeeId);
+    if (!followee) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (followerId === followeeId) {
+      return res.status(400).json({ message: 'Cannot follow yourself' });
+    }
+
+    const isAlreadyFollowing = followee.followers.some(
+      (follower) => follower.userId.toString() === followerId
+    );
+
+    if (isAlreadyFollowing) {
+      // If already following, unfollow by removing from followers array
+      followee.followers = followee.followers.filter(
+        (follower) => follower.userId.toString() !== followerId
+      );
+      await followee.save();
+      return res.status(210).json({ message: 'Successfully unfollowed user' });
+    } else {
+      // If not following, follow by adding to followers array
+      followee.followers.push({
+        userId: followerId,
+        username: username,
+      });
+      await followee.save();
+      return res.status(200).json({ message: 'Successfully followed user' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error following/unfollowing user' });
   }
 };
